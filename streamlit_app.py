@@ -111,6 +111,36 @@ def main():
             # Gera o gráfico de barras usando Plotly
             fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens'})
             st.plotly_chart(fig)
+
+    page = "Viagens por turnos"
+    st.header("Viagens por turnos")
+    st.subheader("Selecione uma data:")
+
+    data_inicial = st.date_input(f"Data Inicial ({page})", key=f"data_inicial_{page}")
+    data_final = st.date_input(f"Data Final ({page})", key=f"data_final_{page}")
+
+    if page == "Viagens por turnos": 
+        if st.button(f"Gerar gráfico", key=f"gerar_grafico_{page}"):
+            conexao = estabelecer_conexao_bd()
+            # Converte as datas para o formato do banco de dados
+            data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
+            data_final_formatada = data_final.strftime('%Y-%m-%d')
+
+            # Executa a consulta SQL para viagens por dia da semana
+            query = f"""SELECT h.Turno, COUNT(*) AS TotalCaronas
+                FROM Deslocamento d
+                JOIN Horario h ON d.HorarioID = h.ID
+                JOIN Data dt ON d.DataID = dt.ID
+                WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                GROUP BY h.Turno;
+            """
+            # Usa o pandas para executar a consulta e obter o resultado
+            df = pd.read_sql(query, conexao)
+
+            # Gera o gráfico de barras usando Plotly
+            fig = px.bar(df, x='Turno', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas'})
+            st.plotly_chart(fig)
+
 # Executa o aplicativo Streamlit
 if __name__ == "__main__":
     main()
