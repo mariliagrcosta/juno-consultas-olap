@@ -171,6 +171,9 @@ def main():
 
             # Gera o gráfico de barras usando Plotly
             fig = px.bar(df, x='CursoNome', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas', 'CursoNome': 'Nome do Curso'})
+
+            # Ordena o gráfico de forma decrescente
+            fig.update_layout(barmode='stack', xaxis={'categoryorder': 'total descending'})
             st.plotly_chart(fig)
 
 # Executa o aplicativo Streamlit
