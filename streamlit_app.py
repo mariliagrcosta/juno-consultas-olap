@@ -141,6 +141,38 @@ def main():
             fig = px.bar(df, x='Turno', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas'})
             st.plotly_chart(fig)
 
+    page = "Caronas oferecidas por curso"
+    st.header("Caronas oferecidas por curso")
+    st.subheader("Selecione uma data:")
+
+    data_inicial = st.date_input(f"Data Inicial ({page})", key=f"data_inicial_{page}")
+    data_final = st.date_input(f"Data Final ({page})", key=f"data_final_{page}")
+
+    if page == "Caronas oferecidas por curso": 
+        if st.button(f"Gerar gráfico", key=f"gerar_grafico_{page}"):
+            conexao = estabelecer_conexao_bd()
+            # Converte as datas para o formato do banco de dados
+            data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
+            data_final_formatada = data_final.strftime('%Y-%m-%d')
+
+            # Executa a consulta SQL para quantidade de caronas oferecidas por curso
+            query = f"""SELECT cs.Nome AS CursoNome,
+                    COUNT(*) AS TotalCaronas
+                FROM Deslocamento d
+                JOIN Data dt ON d.DataID = dt.ID
+                JOIN ParticipanteDeslocamento pd ON d.ID = pd.ID
+                JOIN Sigaa sg ON pd.ID = sg.ID
+                JOIN Cursos cs ON sg.cursoID = cs.ID
+                WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                GROUP BY CursoNome
+            """
+            # Usa o pandas para executar a consulta e obter o resultado
+            df = pd.read_sql(query, conexao)
+
+            # Gera o gráfico de barras usando Plotly
+            fig = px.bar(df, x='CursoNome', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas', 'CursoNome': 'Nome do Curso'})
+            st.plotly_chart(fig)
+
 # Executa o aplicativo Streamlit
 if __name__ == "__main__":
     main()
