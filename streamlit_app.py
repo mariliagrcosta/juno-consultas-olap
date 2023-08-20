@@ -1,31 +1,17 @@
 import streamlit as st
-# import mysql.connector
+import mysql.connector
 import pandas as pd
 import plotly.express as px
-from dotenv import load_dotenv
-load_dotenv()
-import os
-import MySQLdb
+
 
 # Estabelece a conexão com o banco de dados
 def estabelecer_conexao_bd():
-    connection = MySQLdb.connect(
-        host= os.getenv("DB_HOST"),
-        user=os.getenv("DB_USERNAME"),
-        passwd= os.getenv("DB_PASSWORD"),
-        db= os.getenv("DB_NAME"),
-        autocommit = True,
-        ssl_mode = "VERIFY_IDENTITY",
-        ssl      = {
-            "ca": "/etc/ssl/cert.pem"
-        }
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='1234',
+        database='junobaseorigem'
     )
-    # connection = mysql.connector.connect(
-    #     host='localhost',
-    #     user='root',
-    #     password='1234',
-    #     database='junobaseorigem'
-    # )
     return connection
 
 def main():
