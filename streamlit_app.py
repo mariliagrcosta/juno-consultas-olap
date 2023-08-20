@@ -2,15 +2,16 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 import plotly.express as px
+import os
 
 
 # Estabelece a conexão com o banco de dados
 def estabelecer_conexao_bd():
     connection = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='1234',
-        database='junobaseorigem'
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USERNAME"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
     )
     return connection
 
