@@ -1,5 +1,4 @@
-default-libmysqlclient-dev 
-build-essential
+python3-dev default-libmysqlclient-dev build-essential
 mysql==0.0.3
 mysqlclient==2.2.0
 mysql-connector==2.2.9
