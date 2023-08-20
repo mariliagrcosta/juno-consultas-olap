@@ -1,5 +1,5 @@
 mysql==0.0.3
-mysqlclient==2.1.1
+mysqlclient==2.2.0
 mysql-connector==2.2.9
 mysql-connector-python==8.1.0
 SQLAlchemy==2.0.20
