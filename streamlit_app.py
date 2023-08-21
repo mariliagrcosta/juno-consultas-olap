@@ -65,35 +65,44 @@ def pagina_bairros(page):
         st.map(df[['LAT', 'LON', 'Bairro', 'TotalViagens']])
 
 def pagina_viagens_dia_semana(page):
-    st.title("Juno - Viagens por Dia da Semana")
     st.header("Viagens por Dia da Semana")
     st.subheader("Selecione uma data:")
+    
+    data_inicial = st.date_input("Data Inicial")
+    data_final = st.date_input("Data Final")
+    
+    dias_semana = st.multiselect("Selecione os dias da semana", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"])
 
-    data_inicial = st.date_input(f"Data Inicial ({page})", key=f"data_inicial_{page}")
-    data_final = st.date_input(f"Data Final ({page})", key=f"data_final_{page}")
-
-    if st.button(f"Gerar gráfico", key=f"gerar_grafico_{page}"):
+    if st.button("Gerar gráfico"):
         conexao = estabelecer_conexao_bd()
         
         data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
         data_final_formatada = data_final.strftime('%Y-%m-%d')
-
         
+        dias_semana_numeros = [1 if "Segunda-feira" in dias_semana else 0,
+                               2 if "Terça-feira" in dias_semana else 0,
+                               3 if "Quarta-feira" in dias_semana else 0,
+                               4 if "Quinta-feira" in dias_semana else 0,
+                               5 if "Sexta-feira" in dias_semana else 0,
+                               6 if "Sábado" in dias_semana else 0,
+                               7 if "Domingo" in dias_semana else 0]
+
         query = f"""
             SELECT dt.DiaNumeroNaSemana AS DiaSemana,
                 COUNT(*) AS TotalViagens
             FROM Deslocamento d
             JOIN Data dt ON d.DataID = dt.ID
             WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                AND dt.DiaNumeroNaSemana IN ({','.join(map(str, dias_semana_numeros))})
             GROUP BY DiaSemana
         """
         x_labels = {
-            1:'Segunda-feira',
+            1: 'Segunda-feira',
             2: 'Terça-feira',
             3: 'Quarta-feira',
             4: 'Quinta-feira',
             5: 'Sexta-feira',
-            6: 'Sábado', 
+            6: 'Sábado',
             7: 'Domingo',
         }
 
@@ -105,7 +114,7 @@ def pagina_viagens_dia_semana(page):
 
         fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens'})
         st.plotly_chart(fig)
-
+        
 
 def pagina_viagens_turnos(page):
     st.title("Juno - Viagens por Turnos")
