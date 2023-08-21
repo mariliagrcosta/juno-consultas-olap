@@ -115,7 +115,12 @@ def pagina_viagens_dia_semana(page):
         fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens'})
         st.plotly_chart(fig)
         
+        fig2 = px.pie(df, names='DiaSemana', values='TotalViagens', 
+              labels={'TotalViagens': 'Total de Viagens'},
+              color_discrete_sequence=px.colors.sequential.Plasma)  # Defina aqui a paleta de cores desejada
 
+        st.plotly_chart(fig2)
+        
 def pagina_viagens_turnos(page):
     st.title("Juno - Viagens por Turnos")
     st.header("Viagens por turnos")
