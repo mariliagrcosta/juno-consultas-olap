@@ -251,7 +251,7 @@ def viagens_horario():
         df = pd.read_sql(query, conexao)
 
         fig = px.bar(df, x='Hora', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas'})
-        fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
+        fig.update_layout(barmode='stack')
         st.plotly_chart(fig)
 
 
@@ -343,8 +343,9 @@ def viagens_distancia():
         df = pd.read_sql(query, conexao)
 
         fig = px.scatter(df, x="Distancia", y="TotalCaronas", labels={'TotalCaronas': 'Total de Caronas', 'Distancia': 'Distância Percorrida'}, color = "TotalCaronas", size='TotalCaronas',)
-        fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
+        fig.update_layout(barmode='stack')
         st.plotly_chart(fig)
+
 
 if __name__ == "__main__":
     main()
