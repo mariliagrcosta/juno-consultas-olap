@@ -21,11 +21,13 @@ def main():
     pages = {
         "Introdução 🎈": intro_page,
         "P1. Localização dos Pontos de Origem e Destino 📍 ": bairros_page,
-        "P2. Viagens por Dia da Semana 📅": viagens_dia_semana_page,
-        "P3. Viagens por Turnos 🌞": viagens_turno_page,
-        "P4. Viagens por Horários ⏰": viagens_horario,
-        "P5. Caronas Oferecidas por Curso 🎓": caronas_curso_page,
-        "P6. Distância Percorrida nas Viagens 🚗": viagens_distancia,
+        "P2. Vagas Disponibilizadas X Vagas Ocupadas 👨‍👩‍👦": vagas_disponibilizadas_vagas_ocupadas,
+        "P3. Viagens por Dia da Semana 📅": viagens_dia_semana_page,
+        "P4. Viagens por Turnos 🌞": viagens_turno_page,
+        "P5. Viagens por Horários ⏰": viagens_horario,
+        "P6. Caronas Oferecidas por Curso 🎓": caronas_curso_page,
+        "P7. Distância Percorrida nas Viagens 🚗": viagens_distancia,
+
     }
 
     st.sidebar.markdown("## Análises com Streamlit 📊")
@@ -39,12 +41,13 @@ def intro_page():
     st.divider()
     st.write("  A seguinte análise foi desenvolvida pela equipe Juno (Grupo 2) para a cadeira de Modelagem de Dados e teve como guia uma série de perguntas, que encontram-se listadas a seguir:") 
     st.write("")
-    st.write("       1. Quais foram as coordenadas (localizações) que funcionaram como ponto de origem (partida) ou ponto de destino (chegada) de uma viagem, dentro de um determinado intervalo de tempo?")
-    st.write("       2. Quantas caronas foram realizadas em cada dia da semana no intervalo de 1, 2, 3 ou 4 semanas a partir de uma data inicial?")
-    st.write("       3. Quantas caronas foram realizadas em cada turno (manhã, tarde, noite e madrugada) em um determinado intervalo de tempo?")
-    st.write("       4. Quantas caronas foram realizadas em cada hora em um determinado intervalo de tempo?")
-    st.write("       5. Qual a quantidade de caronas oferecidas por curso ofertado pela UFRPE (considerando o curso em que o usuário que ofertou a carona está matriculado) dentro de um determinado intervalo de tempo?")
-    st.write("       6. Quantas caronas foram realizadas, considerando um determinado intervalo de distância entre o ponto de origem e o ponto de chegada (km), dentro de um determinado intervalo de tempo?")
+    st.write("       1. Quais foram as coordenadas (localizações) que funcionaram como ponto de origem (partida) ou ponto de destino (chegada) de uma viagem, considerando certos dias na semana e um determinado intervalo de tempo?")
+    st.write("       2. Qual a relação entre a quantidade de vagas disponibilizadas e a quantidade de vagas ocupadas, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada, bem como um certo período de tempo?")   
+    st.write("       3. Quantas caronas foram realizadas em cada dia da semana no intervalo de 1, 2, 3 ou 4 semanas a partir de uma data inicial, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada?")
+    st.write("       4. Quantas caronas foram realizadas em cada turno (manhã, tarde, noite e madrugada), considerando um determinado intervalo de distância entre o ponto de origem e o de chegada, bem como um certo período de tempo?")
+    st.write("       5. Quantas caronas foram realizadas em cada hora, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada, bem como um certo período de tempo?")
+    st.write("       6. Qual a quantidade de caronas oferecidas pelos estudantes matriculados em cada curso ofertado pela UFRPE, considerando os alunos de determinado período e/ou turno, bem como um certo período de tempo?")
+    st.write("       7. Quantas caronas foram realizadas, considerando um determinado intervalo de distância entre o ponto de origem e o ponto de chegada (km), dentro de um determinado intervalo de tempo?")
     st.write("")
     st.write("  Essas perguntas foram definidas no início do estudo e da análise do Data Warehouse com objetivo de norter esse processo da melhor forma possível e trazer mais qualidade as análises.")
     st.write("")
@@ -123,9 +126,43 @@ def bairros_page():
             df.rename(columns={'Latitude': 'LAT', 'Longitude': 'LON'}, inplace=True)
             st.map(df[['LAT', 'LON', 'bairro', 'TotalViagens']], color = color)
 
+def vagas_disponibilizadas_vagas_ocupadas():
+    
+    st.markdown("# PERGUNTA 2: Vagas Disponibilizadas VS Vagas Ocupadas 👨‍👩‍👦")
+    st.divider()
+    st.markdown("### Apresentação")
+    st.write("A seguinte consulta apresenta a **relação entre a quantidade de vagas disponibilizadas e a quantidade de vagas ocupadas** em determinado intervalo de tempo. De maneira que seja possível identificar o quanto das vagas disponibilizadas estão sendo efetivamente ocupadas.")
+    st.markdown("### Dados")
+   
+    data_inicial = st.date_input("Data Inicial")
+    data_final = st.date_input("Data Final")
+
+    range_quilometragem = st.slider("Selecione o intervalo da distância da viagem", value=[0,30])
+
+    if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
+        conexao = estabelecer_conexao_bd()
+        
+        data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
+        data_final_formatada = data_final.strftime('%Y-%m-%d')
+
+        query = f"""
+            SELECT fd.vagasdisponibilizadas as VagasDisponibilizadas, fd.vagasocupadas as VagasOcupadas, COUNT(*) as Total
+            FROM FatoDeslocamento fd
+            INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
+            WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
+            GROUP BY VagasDisponibilizadas, VagasOcupadas;
+        """
+        
+        df = pd.read_sql(query, conexao)
+
+        fig = px.scatter(df, x="VagasDisponibilizadas", y="VagasOcupadas", labels={'VagasDisponibilizadas': 'Vagas Disponibilizadas', "VagasOcupadas": "Vagas Ocupadas"}, color = "Total", size='Total',)
+        fig.update_layout(barmode='stack')
+        st.plotly_chart(fig)
+
 def viagens_dia_semana_page():
 
-    st.markdown("# PERGUNTA 2: Viagens por Dia da Semana 📅")
+    st.markdown("# PERGUNTA 3: Viagens por Dia da Semana 📅")
     st.divider()
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em cada dia da semana** no período de 1, 2, 3 ou 4 semanas, a partir de uma data inicial. De maneira que seja possível identificar se há relação entre o dia da semana e a quantidade de viagens realizadas.")
@@ -181,7 +218,7 @@ def viagens_dia_semana_page():
 
 def viagens_turno_page():
     
-    st.markdown("# PERGUNTA 3: Viagens por Turnos 🌞")
+    st.markdown("# PERGUNTA 4: Viagens por Turnos 🌞")
     st.divider()
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa turno do dia (manhã, tarde, noite e madruda)** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o turno e a quantidade de viagens realizadas.")
@@ -217,7 +254,7 @@ def viagens_turno_page():
 
 def viagens_horario():
     
-    st.markdown("# PERGUNTA 4: Viagens por Horários ⏰")
+    st.markdown("# PERGUNTA 5: Viagens por Horários ⏰")
     st.divider()
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a hora do dia e a quantidade de viagens realizadas.")
@@ -226,7 +263,7 @@ def viagens_horario():
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
 
-    turno = st.radio("Selecione uma opção:", ("Manhã","Tarde", "Noite", "Madrugada"))
+    turno = st.radio("Selecione o Turno:", ("Manhã","Tarde", "Noite", "Madrugada", "Todos os Turnos"))
     
     range_quilometragem = st.slider("Selecione o intervalo da distância da viagem", value=[0,30])
     st.write("Obs.: O intervalo de distância varia de 0 até 30")
@@ -237,16 +274,30 @@ def viagens_horario():
         data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
         data_final_formatada = data_final.strftime('%Y-%m-%d')
 
-        query = f"""
-            SELECT HOUR(h.horario) as Hora, COUNT(*) AS TotalCaronas
-            FROM FatoDeslocamento fd
-            INNER JOIN DimHorario h ON fd.dimhorario_codigo = h.dimhorario_codigo
-            INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
-            WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
-                AND h.turno = '{turno}'
-                AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
-            GROUP BY HOUR(h.horario);
-        """
+        if turno == "Todos os Turnos":
+
+            query= f"""
+                SELECT HOUR(h.horario) as Hora, COUNT(*) AS TotalCaronas
+                FROM FatoDeslocamento fd
+                INNER JOIN DimHorario h ON fd.dimhorario_codigo = h.dimhorario_codigo
+                INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
+                WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                    AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
+                GROUP BY HOUR(h.horario);
+            """
+        else:
+
+            query = f"""
+                SELECT HOUR(h.horario) as Hora, COUNT(*) AS TotalCaronas
+                FROM FatoDeslocamento fd
+                INNER JOIN DimHorario h ON fd.dimhorario_codigo = h.dimhorario_codigo
+                INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
+                WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                    AND h.turno = '{turno}'
+                    AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
+                GROUP BY HOUR(h.horario);
+            """
+
         
         df = pd.read_sql(query, conexao)
 
@@ -257,7 +308,7 @@ def viagens_horario():
 
 def caronas_curso_page():
 
-    st.markdown("# PERGUNTA 5: Caronas Oferecidas por Curso 🎓")
+    st.markdown("# PERGUNTA 6: Caronas Oferecidas por Curso 🎓")
     st.divider()
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de caronas oferecidas pelos estudantes de cada curso ofertado pela UFRPE de determinados períodos e turnos do curso** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o curso e a quantidade de viagens ofertadas.")
@@ -313,7 +364,7 @@ def caronas_curso_page():
 
 def viagens_distancia():
     
-    st.markdown("# PERGUNTA 6: Distância Percorrida nas Viagens 🚗")
+    st.markdown("# PERGUNTA 7: Distância Percorrida nas Viagens 🚗")
     st.divider()
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo demonstrar a **quantidade de viagens realizadas com determinada quilometragem** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a distância percorrida e a quantidade de viagens realizadas.")
@@ -346,7 +397,7 @@ def viagens_distancia():
         fig.update_layout(barmode='stack')
         st.plotly_chart(fig)
 
-
 if __name__ == "__main__":
     main()
+
 
