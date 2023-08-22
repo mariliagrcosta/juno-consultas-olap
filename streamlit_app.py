@@ -41,7 +41,8 @@ def intro_page():
     st.write("       1. Quais foram as coordenadas (localizações) que funcionaram como ponto de origem (partida) ou ponto de destino (chegada) em um determinado intervalo de tempo?")
     st.write("       2. Quantas caronas foram realizadas em cada dia da semana no período de 1 à 4 semanas a partir de uma data inicial?")
     st.write("       3. Quantas caronas foram realizadas em cada turno (manhã, tarde, noite e madrugada) em um determinado intervalo de tempo?")
-    st.write("       4. Qual a quantidade de caronas que foram oferecidas para cada um dos cursos da UFRPE dentro de um determinado intervalo de tempo?")
+    st.write("       4. Quantas caronas foram realizadas em cada hora em um determinado intervalo de tempo?")
+    st.write("       5. Qual a quantidade de caronas que foram oferecidas para cada um dos cursos da UFRPE dentro de um determinado intervalo de tempo?")
     st.write("")
     st.write("  Essas perguntas foram definidas no início do estudo e da análise do Data Warehouse com objetivo de norter esse processo da melhor forma possível e trazer mais qualidade as análises.")
     st.write("")
@@ -166,7 +167,9 @@ def viagens_dia_semana_page():
         df['DiaSemana'] = pd.Categorical(df['DiaSemana'], categories=list(x_labels.values()), ordered=True)
         df = df.sort_values('DiaSemana')
 
-        fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens', "DiaSemana": "Dias da semana"})
+        #fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens', "DiaSemana": "Dias da semana"})
+        fig = px.line(df, x="DiaSemana", y="TotalViagens", labels={'TotalViagens': 'Total de Viagens', "DiaSemana": "Dias da semana"}) 
+
         st.plotly_chart(fig)
 
 def viagens_turno_page():
