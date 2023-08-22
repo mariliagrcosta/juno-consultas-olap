@@ -1,9 +1,9 @@
 import streamlit as st
+import os
 import mysql.connector
 import pandas as pd
 import plotly.express as px
-import os
-
+from datetime import datetime, date, timedelta
 
 def estabelecer_conexao_bd():
     connection = mysql.connector.connect(
@@ -14,86 +14,114 @@ def estabelecer_conexao_bd():
     )
     return connection
 
+def main():
+    st.title("Juno")
 
-def pagina_bairros(page):
-    st.title("Juno - Bairros de Origem")
+    pages = {
+        "Viagens por Bairros": bairros_page,
+        "Viagens por Dia da Semana": viagens_dia_semana_page,
+        "Viagens por Turnos": viagens_turno_page,
+        "Caronas por Curso": caronas_curso_page,
+    }
+
+    page = st.sidebar.radio("Selecione uma página", list(pages.keys()))
+    pages[page]()
+
+def bairros_page():
+    st.header("Viagens por Bairros")
     page = st.radio("Selecione uma opção:", ("Bairros de Origem", "Bairros de Destino"))
 
     if page == "Bairros de Origem":
-        coluna = "origem.Bairro"
+        coluna = "origem.bairro"
+        cabecalho = "Bairro de Origem"
         latitude_col = "origem.Latitude"
         longitude_col = "origem.Longitude"
     elif page == "Bairros de Destino":
-        coluna = "destino.Bairro"
+        coluna = "destino.bairro"
+        cabecalho = "Bairro de Destino"
         latitude_col = "destino.Latitude"
         longitude_col = "destino.Longitude"
 
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
+    
+    dias_semana = st.multiselect("Selecione os dias da semana", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"])
 
-    if st.button("Gerar Mapa"):
-        
-        conexao = estabelecer_conexao_bd()
+    if page == "Bairros de Origem" or page == "Bairros de Destino":
+        if st.button("Gerar Mapa"):
+            conexao = estabelecer_conexao_bd()
 
-        
-        data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
-        data_final_formatada = data_final.strftime('%Y-%m-%d')
+            data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
+            data_final_formatada = data_final.strftime('%Y-%m-%d')
+            
+            dias_semana_numeros = [1 if "Segunda-feira" in dias_semana else 0,
+                                   2 if "Terça-feira" in dias_semana else 0,
+                                   3 if "Quarta-feira" in dias_semana else 0,
+                                   4 if "Quinta-feira" in dias_semana else 0,
+                                   5 if "Sexta-feira" in dias_semana else 0,
+                                   6 if "Sábado" in dias_semana else 0,
+                                   7 if "Domingo" in dias_semana else 0]
 
-        
-        query = f"""
-            SELECT {coluna}, COUNT(*) AS TotalViagens, {latitude_col}, {longitude_col}
-            FROM Deslocamento d
-            JOIN Endereco origem ON d.OrigemID = origem.ID
-            JOIN Endereco destino ON d.DestinoID = destino.ID
-            JOIN Data dt ON d.DataID = dt.ID
-            WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
-            GROUP BY {coluna}, {latitude_col}, {longitude_col}
+            query = f"""
+                SELECT {coluna}, COUNT(*) AS TotalViagens, {latitude_col}, {longitude_col}
+                FROM FatoDeslocamento AS fd
+                JOIN DimEndereco AS origem ON fd.dimenderecoorigem_codigo = origem.dimendereco_codigo
+                JOIN DimEndereco AS destino ON fd.dimenderecodestino_codigo = destino.dimendereco_codigo
+                JOIN DimData AS dd ON fd.dimdata_codigo = dd.dimdata_codigo
+                WHERE dd.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                    AND dd.dia_numeronasemana IN ({','.join(map(str, dias_semana_numeros))})
+                GROUP BY {coluna}, {latitude_col}, {longitude_col}
             """
 
-        df = pd.read_sql(query, conexao)
-        conexao.close()
+            df = pd.read_sql(query, conexao)
+            conexao.close()
 
-        df['TotalViagens'] = pd.to_numeric(df['TotalViagens'])  
+            df['TotalViagens'] = pd.to_numeric(df['TotalViagens'])  
 
-        total_viagens = df['TotalViagens'].sum()
-        st.write(f"Total de Viagens: {total_viagens}")
+            total_viagens = df['TotalViagens'].sum()
+            st.write(f"Total de Viagens: {total_viagens}")
 
-        df['Latitude'] = df['Latitude'].astype(float)
-        df['Longitude'] = df['Longitude'].astype(float)
+            df['Latitude'] = df['Latitude'].astype(float)
+            df['Longitude'] = df['Longitude'].astype(float)
 
-        df.rename(columns={'Latitude': 'LAT', 'Longitude': 'LON'}, inplace=True)
-        st.map(df[['LAT', 'LON', 'Bairro', 'TotalViagens']])
+            df.rename(columns={'Latitude': 'LAT', 'Longitude': 'LON'}, inplace=True)
+            st.map(df[['LAT', 'LON', 'bairro', 'TotalViagens']])
 
-def pagina_viagens_dia_semana(page):
+def viagens_dia_semana_page():
     st.header("Viagens por Dia da Semana")
     st.subheader("Selecione uma data:")
     
     data_inicial = st.date_input("Data Inicial")
-    data_final = st.date_input("Data Final")
+    dataFinalInput = st.selectbox(
+        "Número de Semanas", (1, 2, 3, 4))
     
-    dias_semana = st.multiselect("Selecione os dias da semana", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"])
+    dataMult = dataFinalInput * 7
+
+    dataFinal = data_inicial + timedelta(days=dataMult)
+
+    
+    # dias_semana = st.multiselect("Selecione os dias da semana", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"])
 
     if st.button("Gerar gráfico"):
         conexao = estabelecer_conexao_bd()
         
         data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
-        data_final_formatada = data_final.strftime('%Y-%m-%d')
+        data_final_formatada = dataFinal.strftime('%Y-%m-%d')
         
-        dias_semana_numeros = [1 if "Segunda-feira" in dias_semana else 0,
-                               2 if "Terça-feira" in dias_semana else 0,
-                               3 if "Quarta-feira" in dias_semana else 0,
-                               4 if "Quinta-feira" in dias_semana else 0,
-                               5 if "Sexta-feira" in dias_semana else 0,
-                               6 if "Sábado" in dias_semana else 0,
-                               7 if "Domingo" in dias_semana else 0]
+        # dias_semana_numeros = [1 if "Segunda-feira" in dias_semana else 0,
+        #                        2 if "Terça-feira" in dias_semana else 0,
+        #                        3 if "Quarta-feira" in dias_semana else 0,
+        #                        4 if "Quinta-feira" in dias_semana else 0,
+        #                        5 if "Sexta-feira" in dias_semana else 0,
+        #                        6 if "Sábado" in dias_semana else 0,
+        #                        7 if "Domingo" in dias_semana else 0]
 
         query = f"""
-            SELECT dt.DiaNumeroNaSemana AS DiaSemana,
+            SELECT dt.dia_numeronasemana AS DiaSemana,
                 COUNT(*) AS TotalViagens
-            FROM Deslocamento d
-            JOIN Data dt ON d.DataID = dt.ID
-            WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
-                AND dt.DiaNumeroNaSemana IN ({','.join(map(str, dias_semana_numeros))})
+            FROM FatoDeslocamento fd
+            JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
+            WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
             GROUP BY DiaSemana
         """
         x_labels = {
@@ -112,95 +140,65 @@ def pagina_viagens_dia_semana(page):
         df['DiaSemana'] = pd.Categorical(df['DiaSemana'], categories=list(x_labels.values()), ordered=True)
         df = df.sort_values('DiaSemana')
 
-        fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens'})
+        fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens', "DiaSemana": "Dias da semana"})
         st.plotly_chart(fig)
-        
-        fig2 = px.pie(df, names='DiaSemana', values='TotalViagens', 
-              labels={'TotalViagens': 'Total de Viagens'},
-              color_discrete_sequence=px.colors.sequential.Plasma)  # Defina aqui a paleta de cores desejada
 
-        st.plotly_chart(fig2)
-        
-def pagina_viagens_turnos(page):
-    st.title("Juno - Viagens por Turnos")
-    st.header("Viagens por turnos")
+def viagens_turno_page():
+    st.header("Viagens por Turnos")
     st.subheader("Selecione uma data:")
 
-    data_inicial = st.date_input(f"Data Inicial ({page})", key=f"data_inicial_{page}")
-    data_final = st.date_input(f"Data Final ({page})", key=f"data_final_{page}")
+    data_inicial = st.date_input("Data Inicial")
+    data_final = st.date_input("Data Final")
     
-    if st.button(f"Gerar gráfico", key=f"gerar_grafico_{page}"):
+    if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
         conexao = estabelecer_conexao_bd()
         
         data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
         data_final_formatada = data_final.strftime('%Y-%m-%d')
 
-        
-        query = f"""SELECT h.Turno, COUNT(*) AS TotalCaronas
-            FROM Deslocamento d
-            JOIN Horario h ON d.HorarioID = h.ID
-            JOIN Data dt ON d.DataID = dt.ID
-            WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
-            GROUP BY h.Turno;
+        query = f"""
+            SELECT h.Turno, COUNT(*) AS TotalCaronas
+            FROM FatoDeslocamento f
+            JOIN DimHorario h ON f.dimhorario_codigo = h.dimhorario_codigo
+            JOIN DimData dt ON f.dimdata_codigo = dt.dimdata_codigo
+            WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+            GROUP BY h.turno;
         """
         
         df = pd.read_sql(query, conexao)
 
-        
         fig = px.bar(df, x='Turno', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas'})
+        fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
         st.plotly_chart(fig)
 
-
-def pagina_caronas_por_curso(page):
-    st.title("Juno - Caronas por Curso")
+def caronas_curso_page():
     st.header("Caronas oferecidas por curso")
     st.subheader("Selecione uma data:")
 
-    data_inicial = st.date_input(f"Data Inicial ({page})", key=f"data_inicial_{page}")
-    data_final = st.date_input(f"Data Final ({page})", key=f"data_final_{page}")
+    data_inicial = st.date_input("Data Inicial")
+    data_final = st.date_input("Data Final")
     
-    if st.button(f"Gerar gráfico", key=f"gerar_grafico_{page}"):
+    if st.button(f"Gerar gráfico", key="gerar_grafico_caronas_curso"):
         conexao = estabelecer_conexao_bd()
-        
+
         data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
         data_final_formatada = data_final.strftime('%Y-%m-%d')
 
-        
-        query = f"""SELECT cs.Nome AS CursoNome,
-                COUNT(*) AS TotalCaronas
-            FROM Deslocamento d
-            JOIN Data dt ON d.DataID = dt.ID
-            JOIN ParticipanteDeslocamento pd ON d.ID = pd.ID
-            JOIN Sigaa sg ON pd.ID = sg.ID
-            JOIN Cursos cs ON sg.cursoID = cs.ID
+        query = f"""SELECT da.nomecurso, COUNT(*) AS TotalCaronas
+            FROM FatoDeslocamento fd
+            JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
+            JOIN DimAluno da ON fd.dimaluno_codigo = da.dimaluno_codigo
+            JOIN DimData dd ON fd.dimdata_codigo = dd.dimdata_codigo
             WHERE dt.Data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
-            GROUP BY CursoNome
+            GROUP BY da.nomecurso;
         """
-       
+
         df = pd.read_sql(query, conexao)
 
-        
-        fig = px.bar(df, x='CursoNome', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas', 'CursoNome': 'Nome do Curso'})
+        fig = px.bar(df, x='TotalCaronas', y='nomecurso', labels={'TotalCaronas': 'Total de Caronas', 'nomecurso': 'Nome do Curso'} , height=850)
 
-        
-        fig.update_layout(barmode='stack', xaxis={'categoryorder': 'total descending'})
+        fig.update_layout(barmode='stack', yaxis={'categoryorder': 'total descending'})
         st.plotly_chart(fig)
-
-
-def main():
-    st.sidebar.title("Menu")
-    opcao = st.sidebar.radio("Selecione uma opção:", 
-                            ("Bairros", "Viagens por Dia da Semana", 
-                             "Viagens por Turnos", "Caronas por Curso"))
-
-    if opcao == "Bairros":
-        pagina_bairros(opcao)
-    elif opcao == "Viagens por Dia da Semana":
-        pagina_viagens_dia_semana(opcao)
-    elif opcao == "Viagens por Turnos":
-        pagina_viagens_turnos(opcao)
-    elif opcao == "Caronas por Curso":
-        pagina_caronas_por_curso(opcao)
 
 if __name__ == "__main__":
     main()
