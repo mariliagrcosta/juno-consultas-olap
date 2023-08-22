@@ -66,16 +66,21 @@ def bairros_page():
         cabecalho = "Bairro de Origem"
         latitude_col = "origem.Latitude"
         longitude_col = "origem.Longitude"
+        color = '#845ec2'
     
     elif escolha_bairro == "Bairros de Destino":
         coluna = "destino.bairro"
         cabecalho = "Bairro de Destino"
         latitude_col = "destino.Latitude"
         longitude_col = "destino.Longitude"
+        color = '#5887c2'
+
 
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
     
+    #municipio = st.multiselect("Selecione os dias da semana", ["Recife", "Olinda", "Jaboatão dos Guararapes"])
+
     dias_semana = st.multiselect("Selecione os dias da semana", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"])
 
     if escolha_bairro == "Bairros de Origem" or escolha_bairro == "Bairros de Destino":
@@ -116,7 +121,7 @@ def bairros_page():
             df['Longitude'] = df['Longitude'].astype(float)
 
             df.rename(columns={'Latitude': 'LAT', 'Longitude': 'LON'}, inplace=True)
-            st.map(df[['LAT', 'LON', 'bairro', 'TotalViagens']])
+            st.map(df[['LAT', 'LON', 'bairro', 'TotalViagens']], color = color)
 
 def viagens_dia_semana_page():
 
