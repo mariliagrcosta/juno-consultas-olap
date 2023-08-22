@@ -141,7 +141,9 @@ def viagens_dia_semana_page():
 
     dataFinal = data_inicial + timedelta(days=dataMult)
 
-    
+    range_quilometragem = st.slider("Selecione o intervalo da distância da viagem", value=[0,30])
+    st.write("Obs.: O intervalo de distância varia de 0 até 30")
+
     if st.button("Gerar gráfico"):
         conexao = estabelecer_conexao_bd()
         
@@ -154,6 +156,7 @@ def viagens_dia_semana_page():
             FROM FatoDeslocamento fd
             INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
             WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
             GROUP BY DiaSemana
         """
         x_labels = {
@@ -172,7 +175,6 @@ def viagens_dia_semana_page():
         df['DiaSemana'] = pd.Categorical(df['DiaSemana'], categories=list(x_labels.values()), ordered=True)
         df = df.sort_values('DiaSemana')
 
-        #fig = px.bar(df, x='DiaSemana', y='TotalViagens', labels={'TotalViagens': 'Total de Viagens', "DiaSemana": "Dias da semana"})
         fig = px.line(df, x="DiaSemana", y="TotalViagens", labels={'TotalViagens': 'Total de Viagens', "DiaSemana": "Dias da semana"}) 
 
         st.plotly_chart(fig)
@@ -188,6 +190,9 @@ def viagens_turno_page():
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
     
+    range_quilometragem = st.slider("Selecione o intervalo da distância da viagem", value=[0,30])
+    st.write("Obs.: O intervalo de distância varia de 0 até 30")
+
     if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
         conexao = estabelecer_conexao_bd()
         
@@ -196,10 +201,11 @@ def viagens_turno_page():
 
         query = f"""
             SELECT h.Turno, COUNT(*) AS TotalCaronas
-            FROM FatoDeslocamento f
-            INNER JOIN DimHorario h ON f.dimhorario_codigo = h.dimhorario_codigo
-            INNER JOIN DimData dt ON f.dimdata_codigo = dt.dimdata_codigo
+            FROM FatoDeslocamento fd
+            INNER JOIN DimHorario h ON fd.dimhorario_codigo = h.dimhorario_codigo
+            INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
             WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
             GROUP BY h.turno;
         """
         
@@ -216,12 +222,15 @@ def viagens_horario():
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a hora do dia e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
-   
+
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
 
     turno = st.radio("Selecione uma opção:", ("Manhã","Tarde", "Noite", "Madrugada"))
     
+    range_quilometragem = st.slider("Selecione o intervalo da distância da viagem", value=[0,30])
+    st.write("Obs.: O intervalo de distância varia de 0 até 30")
+
     if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
         conexao = estabelecer_conexao_bd()
         
@@ -230,11 +239,12 @@ def viagens_horario():
 
         query = f"""
             SELECT HOUR(h.horario) as Hora, COUNT(*) AS TotalCaronas
-            FROM FatoDeslocamento f
-            INNER JOIN DimHorario h ON f.dimhorario_codigo = h.dimhorario_codigo
-            INNER JOIN DimData dt ON f.dimdata_codigo = dt.dimdata_codigo
+            FROM FatoDeslocamento fd
+            INNER JOIN DimHorario h ON fd.dimhorario_codigo = h.dimhorario_codigo
+            INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
             WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
                 AND h.turno = '{turno}'
+                AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
             GROUP BY HOUR(h.horario);
         """
         
@@ -312,7 +322,8 @@ def viagens_distancia():
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
 
-    range = st.slider("Selecione o valor mínimo e máximo da distância", value=[0,250])
+    range_quilometragem = st.slider("Selecione o intervalo da distância da viagem", value=[0,30])
+    st.write("Obs.: O intervalo de distância varia de 0 até 30")
 
     if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
         conexao = estabelecer_conexao_bd()
@@ -325,17 +336,15 @@ def viagens_distancia():
             FROM FatoDeslocamento fd
             INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
             WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
-                AND fd.distanciadeslocamento BETWEEN {range[0]} AND {range[1]}
+                AND fd.distanciadeslocamento BETWEEN {range_quilometragem[0]} AND {range_quilometragem[1]}
             GROUP BY ROUND(fd.distanciadeslocamento);
         """
         
         df = pd.read_sql(query, conexao)
 
-        #fig = px.bar(df, x='Distancia', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas', 'Distancia': 'Distância Percorrida'})
         fig = px.scatter(df, x="Distancia", y="TotalCaronas", labels={'TotalCaronas': 'Total de Caronas', 'Distancia': 'Distância Percorrida'}, color = "TotalCaronas", size='TotalCaronas',)
         fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
         st.plotly_chart(fig)
-
 
 if __name__ == "__main__":
     main()
