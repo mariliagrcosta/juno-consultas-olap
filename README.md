@@ -12,7 +12,7 @@ Para instalar as depedências necessárias para o funcionamento do projeto, que 
 
 No arquivo "requirements.txt" estão listadas as bibliotecas/módulos utilizados e suas versões.
 
-## Variaveis de Ambiente
+## Variáveis de Ambiente
 
 Agora, para rodar o projeto localmente é necessário acessar o arquivo "streamlit_app.py", navegar para a linha 8 e substitutir as seguintes variáveis, como indicado a seguir:
 
