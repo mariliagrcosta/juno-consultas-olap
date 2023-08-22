@@ -174,7 +174,7 @@ def viagens_dia_semana_page():
     dataFinalInput = st.selectbox(
         "Número de Semanas", (1, 2, 3, 4))
     
-    dataMult = dataFinalInput * 6
+    dataMult = (dataFinalInput * 7) - 1
 
     dataFinal = data_inicial + timedelta(days=dataMult)
 
