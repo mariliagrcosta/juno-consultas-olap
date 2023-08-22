@@ -7,10 +7,10 @@ from datetime import datetime, date, timedelta
 
 def estabelecer_conexao_bd():
     connection = mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USERNAME"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
+        host="YOUR_MYSQL_HOST",
+        user="YOUR_MYSQL_USER",
+        password="YOUR_MYSQL_PASSWORD",
+        database="DATABASE_NAME"
     )
     return connection
 
