@@ -7,10 +7,10 @@ from datetime import datetime, date, timedelta
 
 def estabelecer_conexao_bd():
     connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="1234",
-        database="junodwpopulado"
+        host="YOUR_MYSQL_HOST",
+        user="YOUR_MYSQL_USER",
+        password="YOUR_MYSQL_PASSWORD",
+        database="DATABASE_NAME"
     )
     return connection
 
@@ -19,7 +19,6 @@ def main():
     st.title("Juno")
 
     st.sidebar.title("Juno")
-
 
     pages = {
         "Viagens por Bairros": bairros_page,
