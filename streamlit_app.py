@@ -51,16 +51,16 @@ def intro_page():
     st.write("")
     st.write("  Essas perguntas foram definidas no início do estudo e da análise do Data Warehouse com objetivo de norter esse processo da melhor forma possível e trazer mais qualidade as análises.")
     st.write("")
-    st.write("  Então, digo isso, vamos seguir para aos resultados! 😊")
+    st.write("  Então, vamos seguir para aos resultados! 😊")
     st.write("")
-    st.write("  Os resultados da análise podem ser acessado por meio do menu lateral no canto esquerdo, em que cada página está relacionada a uma das 4 perguntas que foram apresentadas")
+    st.write("  Os resultados da análise podem ser acessado por meio do menu lateral no canto esquerdo, em que cada página está relacionada a uma das 7 perguntas que foram apresentadas")
 
 def bairros_page():
     
     st.markdown("# PERGUNTA 1: Localização dos Pontos de Origem e Destino 📍 ")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo indicar a **localização (coordenadas)** dos **pontos de origem e pontos de destino** das viagens que ocorreram em determinado intervalo de tempo, em certos dias da semana. De modo que seja possível perceber de forma visual quais regiões costumam servir mais como ponto de partida ou de chegada.")
+    st.write("A seguinte consulta tem como objetivo indicar a **localização (coordenadas)** dos **pontos de origem e pontos de destino** das viagens que ocorreram em determinado intervalo de tempo e em certos dias da semana. De modo que seja possível perceber de forma visual quais regiões costumam servir mais como ponto de partida ou de chegada.")
     st.write("")
     st.markdown("### Dados")
 
@@ -131,7 +131,7 @@ def vagas_disponibilizadas_vagas_ocupadas():
     st.markdown("# PERGUNTA 2: Vagas Disponibilizadas VS Vagas Ocupadas 👨‍👩‍👦")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta apresenta a **relação entre a quantidade de vagas disponibilizadas e a quantidade de vagas ocupadas** em determinado intervalo de tempo. De maneira que seja possível identificar o quanto das vagas disponibilizadas estão sendo efetivamente ocupadas.")
+    st.write("A seguinte consulta apresenta a **relação entre a quantidade de vagas disponibilizadas e a quantidade de vagas ocupadas**, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada, bem como um certo período de tempo. De maneira que seja possível identificar o quanto das vagas disponibilizadas estão sendo efetivamente ocupadas.")
     st.markdown("### Dados")
    
     data_inicial = st.date_input("Data Inicial")
@@ -165,7 +165,7 @@ def viagens_dia_semana_page():
     st.markdown("# PERGUNTA 3: Viagens por Dia da Semana 📅")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em cada dia da semana** no período de 1, 2, 3 ou 4 semanas, a partir de uma data inicial. De maneira que seja possível identificar se há relação entre o dia da semana e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em cada dia da semana** no período de 1, 2, 3 ou 4 semanas, a partir de uma data inicial, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada. De maneira que seja possível identificar se há relação entre o dia da semana e a quantidade de viagens que foram realizadas.")
     st.markdown("### Dados")
 
     st.subheader("Selecione uma data:")
@@ -221,7 +221,7 @@ def viagens_turno_page():
     st.markdown("# PERGUNTA 4: Viagens por Turnos 🌞")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa turno do dia (manhã, tarde, noite e madruda)** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o turno e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa turno do dia (manhã, tarde, noite e madruda)**, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada, bem como um certo período de tempo. De maneira que seja possível identificar se há relação entre o turno e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
    
     data_inicial = st.date_input("Data Inicial")
@@ -257,7 +257,7 @@ def viagens_horario():
     st.markdown("# PERGUNTA 5: Viagens por Horários ⏰")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a hora do dia e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia**, considerando um determinado intervalo de distância entre o ponto de origem e o de chegada, bem como um certo período de tempo. De maneira que seja possível identificar se há relação entre a hora do dia e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
 
     data_inicial = st.date_input("Data Inicial")
@@ -311,7 +311,7 @@ def caronas_curso_page():
     st.markdown("# PERGUNTA 6: Caronas Oferecidas por Curso 🎓")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de caronas oferecidas pelos estudantes de cada curso ofertado pela UFRPE de determinados períodos e turnos do curso** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o curso e a quantidade de viagens ofertadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de caronas oferecidas pelos estudantes matriculados em cada curso ofertado pela UFRPE**, considerando os alunos de determinado período e/ou turno, bem como um certo período de tempo. De maneira que seja possível identificar se há relação entre o curso e a quantidade de viagens ofertadas.")
     st.markdown("### Dados")
 
 
@@ -367,7 +367,7 @@ def viagens_distancia():
     st.markdown("# PERGUNTA 7: Distância Percorrida nas Viagens 🚗")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo demonstrar a **quantidade de viagens realizadas com determinada quilometragem** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a distância percorrida e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens realizadas com determinada quilometragem** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a distância percorrida e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
    
     data_inicial = st.date_input("Data Inicial")
