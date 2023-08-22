@@ -25,6 +25,7 @@ def main():
         "P3. Viagens por Turnos 🌞": viagens_turno_page,
         "P4. Viagens por Horários ⏰": viagens_horario,
         "P5. Caronas Oferecidas por Curso 🎓": caronas_curso_page,
+        "P6. Distância Percorrida nas Viagens 🚗": viagens_distancia,
     }
 
     st.sidebar.markdown("## Análises com Streamlit 📊")
@@ -43,6 +44,7 @@ def intro_page():
     st.write("       3. Quantas caronas foram realizadas em cada turno (manhã, tarde, noite e madrugada) em um determinado intervalo de tempo?")
     st.write("       4. Quantas caronas foram realizadas em cada hora em um determinado intervalo de tempo?")
     st.write("       5. Qual a quantidade de caronas que foram oferecidas para cada um dos cursos da UFRPE dentro de um determinado intervalo de tempo?")
+    st.write("       6. Qual a quantidade de caronas que foram realizadas com determinada quilometragem dentro de um determinado intervalo de tempo?")
     st.write("")
     st.write("  Essas perguntas foram definidas no início do estudo e da análise do Data Warehouse com objetivo de norter esse processo da melhor forma possível e trazer mais qualidade as análises.")
     st.write("")
@@ -79,8 +81,6 @@ def bairros_page():
     data_inicial = st.date_input("Data Inicial")
     data_final = st.date_input("Data Final")
     
-    #municipio = st.multiselect("Selecione os dias da semana", ["Recife", "Olinda", "Jaboatão dos Guararapes"])
-
     dias_semana = st.multiselect("Selecione os dias da semana", ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"])
 
     if escolha_bairro == "Bairros de Origem" or escolha_bairro == "Bairros de Destino":
@@ -182,7 +182,7 @@ def viagens_turno_page():
     st.markdown("# PERGUNTA 3: Viagens por Turnos 🌞")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa turno do dia (manhã, tarde, noite e madruda)** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o horário do dia e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa turno do dia (manhã, tarde, noite e madruda)** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o turno e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
    
     data_inicial = st.date_input("Data Inicial")
@@ -211,10 +211,10 @@ def viagens_turno_page():
 
 def viagens_horario():
     
-    st.markdown("# PERGUNTA 3: Viagens por Horários ⏰")
+    st.markdown("# PERGUNTA 4: Viagens por Horários ⏰")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o horário do dia e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a hora do dia e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
    
     data_inicial = st.date_input("Data Inicial")
@@ -247,7 +247,7 @@ def viagens_horario():
 
 def caronas_curso_page():
 
-    st.markdown("# PERGUNTA 4: Caronas Oferecidas por Curso 🎓")
+    st.markdown("# PERGUNTA 5: Caronas Oferecidas por Curso 🎓")
     st.divider()
     st.markdown("### Apresentação")
     st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de caronas oferecidas pelos estudantes de cada curso ofertado pela UFRPE de determinados períodos e turnos do curso** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o curso e a quantidade de viagens ofertadas.")
@@ -300,6 +300,42 @@ def caronas_curso_page():
 
         fig.update_layout(barmode='stack', yaxis={'categoryorder': 'total descending'})
         st.plotly_chart(fig)
+
+def viagens_distancia():
+    
+    st.markdown("# PERGUNTA 6: Distância Percorrida nas Viagens 🚗")
+    st.divider()
+    st.markdown("### Apresentação")
+    st.write("A seguinte consulta tem como objetivo demonstrar a **quantidade de viagens realizadas com determinada quilometragem** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre a distância percorrida e a quantidade de viagens realizadas.")
+    st.markdown("### Dados")
+   
+    data_inicial = st.date_input("Data Inicial")
+    data_final = st.date_input("Data Final")
+
+    range = st.slider("Selecione o valor mínimo e máximo da distância", value=[0,250])
+
+    if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
+        conexao = estabelecer_conexao_bd()
+        
+        data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
+        data_final_formatada = data_final.strftime('%Y-%m-%d')
+
+        query = f"""
+            SELECT ROUND(fd.distanciadeslocamento) as Distancia, COUNT(*) AS TotalCaronas
+            FROM FatoDeslocamento fd
+            INNER JOIN DimData dt ON fd.dimdata_codigo = dt.dimdata_codigo
+            WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                AND fd.distanciadeslocamento BETWEEN {range[0]} AND {range[1]}
+            GROUP BY ROUND(fd.distanciadeslocamento);
+        """
+        
+        df = pd.read_sql(query, conexao)
+
+        #fig = px.bar(df, x='Distancia', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas', 'Distancia': 'Distância Percorrida'})
+        fig = px.scatter(df, x="Distancia", y="TotalCaronas", labels={'TotalCaronas': 'Total de Caronas', 'Distancia': 'Distância Percorrida'}, color = "TotalCaronas", size='TotalCaronas',)
+        fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
+        st.plotly_chart(fig)
+
 
 if __name__ == "__main__":
     main()
