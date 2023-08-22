@@ -27,6 +27,12 @@ Agora, para rodar o projeto localmente é necessário acessar o arquivo "streaml
 
 ## Execução do Projeto (Local)
 
-Por fim, para executar o projeto basta rodar o seguinte comando no terminal, na pasta do projeto:
+Para executar o projeto basta rodar o seguinte comando no terminal, na pasta do projeto:
 
     python3 -m streamlit run streamlit_app.py
+
+## Execução do Projeto (Remoto)
+
+Para executar o projeto remotamente basta acessar:
+
+    https://narwhal-nearby-adder.ngrok-free.app/
