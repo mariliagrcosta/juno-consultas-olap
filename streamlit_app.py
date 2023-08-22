@@ -23,7 +23,8 @@ def main():
         "P1. Localização dos Pontos de Origem e Destino 📍 ": bairros_page,
         "P2. Viagens por Dia da Semana 📅": viagens_dia_semana_page,
         "P3. Viagens por Turnos 🌞": viagens_turno_page,
-        "P4. Caronas Oferecidas por Curso 🎓": caronas_curso_page,
+        "P4. Viagens por Horários ⏰": viagens_horario,
+        "P5. Caronas Oferecidas por Curso 🎓": caronas_curso_page,
     }
 
     st.sidebar.markdown("## Análises com Streamlit 📊")
@@ -173,7 +174,7 @@ def viagens_turno_page():
     st.markdown("# PERGUNTA 3: Viagens por Turnos 🌞")
     st.divider()
     st.markdown("### Apresentação")
-    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em determinado turno do dia (manhã, tarde, noite e madruda)** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o horário do dia e a quantidade de viagens realizadas.")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa turno do dia (manhã, tarde, noite e madruda)** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o horário do dia e a quantidade de viagens realizadas.")
     st.markdown("### Dados")
    
     data_inicial = st.date_input("Data Inicial")
@@ -199,6 +200,42 @@ def viagens_turno_page():
         fig = px.bar(df, x='Turno', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas'})
         fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
         st.plotly_chart(fig)
+
+def viagens_horario():
+    
+    st.markdown("# PERGUNTA 3: Viagens por Horários ⏰")
+    st.divider()
+    st.markdown("### Apresentação")
+    st.write("A seguinte consulta tem como objetivo apresentar a **quantidade de viagens que ocorreram em certa hora do dia** em determinado intervalo de tempo. De maneira que seja possível identificar se há relação entre o horário do dia e a quantidade de viagens realizadas.")
+    st.markdown("### Dados")
+   
+    data_inicial = st.date_input("Data Inicial")
+    data_final = st.date_input("Data Final")
+
+    turno = st.radio("Selecione uma opção:", ("Manhã","Tarde", "Noite", "Madrugada"))
+    
+    if st.button(f"Gerar gráfico", key="gerar_grafico_viagens_turno"):
+        conexao = estabelecer_conexao_bd()
+        
+        data_inicial_formatada = data_inicial.strftime('%Y-%m-%d')
+        data_final_formatada = data_final.strftime('%Y-%m-%d')
+
+        query = f"""
+            SELECT HOUR(h.horario) as Hora, COUNT(*) AS TotalCaronas
+            FROM FatoDeslocamento f
+            INNER JOIN DimHorario h ON f.dimhorario_codigo = h.dimhorario_codigo
+            INNER JOIN DimData dt ON f.dimdata_codigo = dt.dimdata_codigo
+            WHERE dt.data BETWEEN '{data_inicial_formatada}' AND '{data_final_formatada}'
+                AND h.turno = '{turno}'
+            GROUP BY HOUR(h.horario);
+        """
+        
+        df = pd.read_sql(query, conexao)
+
+        fig = px.bar(df, x='Hora', y='TotalCaronas', labels={'TotalCaronas': 'Total de Caronas'})
+        fig.update_layout(barmode='stack', xaxis={'categoryorder':'array', 'categoryarray':['Manhã','Tarde','Noite','Madrugada']})
+        st.plotly_chart(fig)
+
 
 def caronas_curso_page():
 
