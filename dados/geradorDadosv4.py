@@ -37,7 +37,7 @@ def generateSigaaData(QTD_DADOS):
 def generateEnderecoData(QTD_DADOS):
     id = list(range(1, QTD_DADOS + 1))
 
-    enderecoscsv = open("generateData\enums\lista_enderecos2.csv", encoding="utf8")
+    enderecoscsv = open("dados\enums\lista_enderecos2.csv", encoding="utf8")
     enderecos = list(csv.reader(enderecoscsv, delimiter=","))
 
     enderecoIDs = []
@@ -161,7 +161,7 @@ def generateVeiculoData(QTD_DADOS, QTD_DADOS_USUARIO):
     tipo = [random.randint(1,2) for _ in range(QTD_DADOS)]
     placa = [generate_license_plate() for _ in range(QTD_DADOS)]
 
-    carroscsv = open("generateData\enums\lista_carros.csv", encoding="utf8")
+    carroscsv = open("dados\enums\lista_carros.csv", encoding="utf8")
     carros = list(csv.reader(carroscsv, delimiter=","))
 
     ano = []
